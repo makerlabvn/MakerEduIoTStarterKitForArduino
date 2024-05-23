@@ -1,0 +1,11 @@
+Pin Configuration
+
+A1 -> LED
+
+A2 -> BUT
+
+A3 -> Poten
+
+D9 -> LDR
+
+D10 -> Buzz
