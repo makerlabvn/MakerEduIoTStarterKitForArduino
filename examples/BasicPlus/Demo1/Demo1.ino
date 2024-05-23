@@ -24,7 +24,6 @@ unsigned long lastTimeSen = 0;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 uint16_t value = 0;
 unsigned long lastTimeClear = 0;
-bool buttonState = 1;
 OneButton myButton(A2, true, true);
 bool ledState = 0, button = 0, lastLedState = 0;
 uint8_t trueValue = 0;

@@ -18,8 +18,8 @@
 
 // Step 3: Setup WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "HshopLTK";      // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
-char pass[] = "HshopLTK@2311"; // Key in your wifi password.
+char ssid[] = "MakerLab.vn";      // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
+char pass[] = ""; // Key in your wifi password.
 unsigned long lastTimeSen = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
