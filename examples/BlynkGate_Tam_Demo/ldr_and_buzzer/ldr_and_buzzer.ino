@@ -17,8 +17,8 @@
 #define LDR_PIN A1
 #define LED_PIN 9
 #define BUZZER_PIN 10
-#define POT_MIN_VALUE 0
-#define POT_MAX_VALUE 730
+#define LDR_MIN_VALUE 0
+#define LDR_MAX_VALUE 730
 
 // Step 2: include library
 #include "BlynkGate.h"
@@ -26,32 +26,28 @@
 
 // Step 3: Setup WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "MakerLab.vn"; // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
-char pass[] = "";            // Key in your wifi password.
+char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
+char pass[] = "";             // Key in your wifi password.
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-uint8_t percentValue = 0;
+int percentValue = 0;
 bool doubleCickSound_flag = 0;
 bool dayState = 0;
 bool lastDayState = 0;
 unsigned long lastTimeSen = 0;
 
-void makerDelay(unsigned long pa_time)
-{
+void makerDelay(unsigned long pa_time) {
   unsigned long makerMillis = millis() + pa_time;
-  while (makerMillis >= millis())
-  {
+  while (makerMillis >= millis()) {
     ;
     ;
   }
 }
 
-void doubleClickSound()
-{
+void doubleClickSound() {
   doubleCickSound_flag = 1;
-  if (doubleCickSound_flag == 1)
-  {
+  if (doubleCickSound_flag == 1) {
     digitalWrite(BUZZER_PIN, HIGH);
     makerDelay(75);
     digitalWrite(BUZZER_PIN, LOW);
@@ -63,23 +59,18 @@ void doubleClickSound()
     makerDelay(75);
 
     doubleCickSound_flag = 0;
-  }
-  else
-  {
+  } else {
     return;
   }
 }
 
-void checkDayState()
-{
-  if (lastDayState != dayState)
-  {
+void checkDayState() {
+  if (lastDayState != dayState) {
     doubleClickSound();
     lastDayState = dayState;
   }
 }
-void setup()
-{
+void setup() {
   // put your setup code here, to run once:
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
@@ -95,18 +86,16 @@ void setup()
   lastDayState = dayState;
 }
 
-void loop()
-{
+void loop() {
   // put your main code here, to run repeatedly:
   Blynk.run();
   // DO NOT using delay
   // delay(100);
   checkDayState();
-  showDataOnLCDAndControlLED();
-
+  controlState();
+  showDataOnLCD();
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 1000)
-  {
+  if (millis() - lastTimeSen >= 1000) {
     lastTimeSen = millis();
     Blynk.virtualWrite(1, percentValue);
     // Step 6: Send Virtual pin Value
@@ -114,8 +103,7 @@ void loop()
 }
 
 // Step 5: Get Virtual pin Value
-BLYNK_WRITE_DEFAULT()
-{
+BLYNK_WRITE_DEFAULT() {
   // double myDouble = param.asFloat();
   // String myString = param.asString();
   int myInt = param.asInt();
@@ -126,31 +114,27 @@ BLYNK_WRITE_DEFAULT()
   Serial.println(myInt);
 }
 
-void showDataOnLCDAndControlLED()
-{
+void controlState() {
+  int temp_ldr = analogRead(LDR_PIN);
+  int lightPercent = map(temp_ldr, LDR_MIN_VALUE, LDR_MIN_VALUE, 0, 100);
+  if (lightPercent >= 50) {
+    dayState = 1;
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    dayState = 0;
+    digitalWrite(LED_PIN, LOW);
+  }
+}
+void showDataOnLCD() {
   lcd.setCursor(0, 0);
   lcd.print("Basic 3");
   lcd.setCursor(0, 1);
   lcd.print("Room is: ");
-
-  uint16_t temp_ldr = analogRead(LDR_PIN);
-
-  uint8_t ldr_to_light_percent = map(temp_ldr, 750, 0, 0, 100);
-
-  if (ldr_to_light_percent > 50)
-  {
-    dayState = 0;
-    digitalWrite(LED_PIN, LOW);
-    lcd.setCursor(9, 1);
+  lcd.setCursor(9, 1);
+  if (dayState) {
     lcd.print("Bright");
-    lcd.print("      ");
-  }
-  else if (ldr_to_light_percent < 50)
-  {
-    dayState = 1;
-    digitalWrite(LED_PIN, HIGH);
-    lcd.setCursor(9, 1);
+  } else {
     lcd.print("Dark");
-    lcd.print("      ");
   }
+  lcd.print("      ");
 }
