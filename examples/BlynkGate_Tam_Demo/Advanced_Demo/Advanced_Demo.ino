@@ -2,7 +2,7 @@
   Title:  Advanced Demo
   Author: Thanh Tam
   Date: 5/6/2024
-  Description: Combine all sensor and show on LCD
+  Description: Combine all sensor, show on LCD and write into Blynk
               - Virtual Pin V0 (Switch) on Blynk for button
               - Virtual Pin V1 (Gauge)  on Blynk for Potentiometer
               - Virtual Pin V2 (Chart)  on Blynk for LDR sensor

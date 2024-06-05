@@ -1,14 +1,9 @@
-/**
- * Title: Control LED using Blynk Switch and Push Button
- *
- * Author: Daniel
- *
- *
- *
- *
- *
- */
-
+/*
+  Title:  Basic Demo 3
+  Author: Daniel Hoang
+  Date:   5/6/2024
+  Description: Read value of the LDR sensor and write value into Blynk (Virtual Pin V1 Gauge) every 5s.
+*/
 // Step 1: Get this infomation from Blynk.cloud
 #define BLYNK_TEMPLATE_ID "TMPL63kCqkp4D"
 #define BLYNK_TEMPLATE_NAME "IoT"
@@ -37,7 +32,7 @@ bool doubleCickSound_flag = 0;
 bool dayState = 0;
 bool lastDayState = 0;
 unsigned long lastTimeSen = 0;
-
+int temp_ldr = 0;
 void makerDelay(unsigned long pa_time) {
   unsigned long makerMillis = millis() + pa_time;
   while (makerMillis >= millis()) {
@@ -94,7 +89,7 @@ void loop() {
   controlState();
   showDataOnLCD();
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 1000) {
+  if (millis() - lastTimeSen >= 5000) {
     lastTimeSen = millis();
     Blynk.virtualWrite(1, percentValue);
     // Step 6: Send Virtual pin Value
@@ -114,9 +109,9 @@ BLYNK_WRITE_DEFAULT() {
 }
 
 void controlState() {
-  int temp_ldr = constrain(analogRead(LDR_PIN), LDR_MIN_VALUE, LDR_MAX_VALUE);
-  int lightPercent = map(temp_ldr, LDR_MAX_VALUE, LDR_MIN_VALUE, 0, 100);
-  if (lightPercent >= 50) {
+  temp_ldr = constrain(analogRead(LDR_PIN), LDR_MIN_VALUE, LDR_MAX_VALUE);
+  percentValue = map(temp_ldr, LDR_MAX_VALUE, LDR_MIN_VALUE, 0, 100);
+  if (percentValue >= 50) {
     dayState = 1;
     digitalWrite(LED_PIN, HIGH);
   } else {

@@ -1,16 +1,20 @@
+/*
+  Title: Basic Demo 1
+  Author: Daniel Hoang
+  Date:   5/6/2024
+  Description: Using button to turn on or turn off the led and write state of the led into virtual pin V0 on Blynk
+*/
 #define BLYNK_TEMPLATE_ID "TMPL63kCqkp4D"
 #define BLYNK_TEMPLATE_NAME "IoT"
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
+#define BUTTON_PIN 9
 #define LED_PIN 11
-#define POTEN_PIN A2
-
-#define POT_MIN_VALUE 0
-#define POT_MAX_VALUE 690
 
 // Step 2: include library
 #include "BlynkGate.h"
 #include "LiquidCrystal_I2C.h"
+#include "OneButton.h"
 
 // Step 3: Setup WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
@@ -20,8 +24,10 @@ char pass[] = "";             // Key in your wifi password.
 unsigned long lastTimeSen = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-int percentValue = 0;
-int pwmValue = 0;
+OneButton myButton(BUTTON_PIN, true, true);
+
+bool ledState = 0;
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_PIN, OUTPUT);
@@ -32,6 +38,8 @@ void setup() {
   lcd.init();
   lcd.backlight();
 
+  myButton.attachClick(ledToggle);
+
   // Step 4: begin BlynkGate
   Blynk.begin(auth, ssid, pass);
 }
@@ -41,14 +49,14 @@ void loop() {
   Blynk.run();
   // DO NOT using delay
   // delay(100);
-  controlLed();
+  myButton.tick();
+  updateLedState();
   showOnLCD();
-
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
   if (millis() - lastTimeSen >= 1000) {
     lastTimeSen = millis();
-    Blynk.virtualWrite(1, percentValue);
     // Step 6: Send Virtual pin Value
+    
   }
 }
 
@@ -62,23 +70,36 @@ BLYNK_WRITE_DEFAULT() {
   Serial.print(request.pin);
   Serial.print(": ");
   Serial.println(myInt);
+
+  if (request.pin == 0) {
+    if (myInt == 1) {
+      ledState = 1;
+    } else {
+      ledState = 0;
+    }
+  }
 }
 
-void controlLed() {
-  int temp_pot = constrain(analogRead(POTEN_PIN), POT_MIN_VALUE, POT_MAX_VALUE);
-  pwmValue = map(temp_pot, POT_MIN_VALUE, POT_MAX_VALUE, 0, 255);
-  pwmValue = constrain(pwmValue, 0, 255);
-  analogWrite(LED_PIN, pwmValue);
+void ledToggle() {
+  ledState = !ledState;
+  Blynk.virtualWrite(0, ledState);
 }
 
+void updateLedState(){
+  digitalWrite(LED_PIN, ledState);
+}
 
 void showOnLCD() {
   lcd.setCursor(0, 0);
-  lcd.print("Basic 2");
+  lcd.print("Basic 1");
   lcd.setCursor(0, 1);
-  lcd.print("LED ON: ");
-  lcd.setCursor(8, 1);
-  percentValue = map(pwmValue, 0, 255, 0, 100);
-  lcd.print(String(percentValue) + "%");
-  lcd.print("    ");
+  lcd.print("LED STATUS: ");
+  lcd.setCursor(12, 1);
+  if (ledState == 1) {
+    lcd.print("ON ");
+
+  } else {
+    lcd.print("OFF");
+  }
+  lcd.print("   ");
 }
