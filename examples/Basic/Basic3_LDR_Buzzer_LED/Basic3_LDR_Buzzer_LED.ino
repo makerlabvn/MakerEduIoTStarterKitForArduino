@@ -15,7 +15,7 @@
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
 #define LDR_PIN A1
-#define LED_PIN 9
+#define LED_PIN 11
 #define BUZZER_PIN 10
 #define POT_MIN_VALUE 0
 #define POT_MAX_VALUE 730

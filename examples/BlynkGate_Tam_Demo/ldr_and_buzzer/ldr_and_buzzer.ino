@@ -15,10 +15,11 @@
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
 #define LDR_PIN A1
-#define LED_PIN 9
+#define LED_PIN 11
 #define BUZZER_PIN 10
+
 #define LDR_MIN_VALUE 0
-#define LDR_MAX_VALUE 730
+#define LDR_MAX_VALUE 690
 
 // Step 2: include library
 #include "BlynkGate.h"
@@ -59,9 +60,7 @@ void doubleClickSound() {
     makerDelay(75);
 
     doubleCickSound_flag = 0;
-  } else {
-    return;
-  }
+  } 
 }
 
 void checkDayState() {
@@ -115,8 +114,8 @@ BLYNK_WRITE_DEFAULT() {
 }
 
 void controlState() {
-  int temp_ldr = analogRead(LDR_PIN);
-  int lightPercent = map(temp_ldr, LDR_MIN_VALUE, LDR_MIN_VALUE, 0, 100);
+  int temp_ldr = constrain(analogRead(LDR_PIN), LDR_MIN_VALUE, LDR_MAX_VALUE);
+  int lightPercent = map(temp_ldr, LDR_MAX_VALUE, LDR_MIN_VALUE, 0, 100);
   if (lightPercent >= 50) {
     dayState = 1;
     digitalWrite(LED_PIN, HIGH);

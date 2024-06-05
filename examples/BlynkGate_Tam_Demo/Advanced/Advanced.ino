@@ -117,9 +117,9 @@ void showOnLCD() {
   lcd.setCursor(12, 0);
   brightnessPercent = map(brightness, 0, 255, 0, 100);
   if (brightnessPercent < 10) {
-    lcd.print((String)brightnessPercent + "%  ");
+    lcd.print("  " + (String)brightnessPercent + "%");
   } else if (brightnessPercent < 100) {
-    lcd.print((String)brightnessPercent + "% ");
+    lcd.print(" " + (String)brightnessPercent + "%");
   } else {
     lcd.print((String)brightnessPercent + "%");
   }

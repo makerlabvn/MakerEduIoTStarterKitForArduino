@@ -2,8 +2,8 @@
 #define BLYNK_TEMPLATE_NAME "IoT"
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
-#define PUSH_BUTTON_PIN A2
-#define LED_PIN 9
+#define BUTTON_PIN 9
+#define LED_PIN 11
 
 // Step 2: include library
 #include "BlynkGate.h"
@@ -18,13 +18,12 @@ char pass[] = "";             // Key in your wifi password.
 unsigned long lastTimeSen = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-OneButton myButton(A2, true, true);
+OneButton myButton(BUTTON_PIN, true, true);
 
 bool ledState = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(PUSH_BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
 
   Serial.begin(9600);
@@ -51,7 +50,7 @@ void loop() {
   if (millis() - lastTimeSen >= 1000) {
     lastTimeSen = millis();
     // Step 6: Send Virtual pin Value
-    Blynk.virtualWrite(0, ledState);
+    
   }
 }
 
@@ -77,6 +76,7 @@ BLYNK_WRITE_DEFAULT() {
 
 void ledToggle() {
   ledState = !ledState;
+  Blynk.virtualWrite(0, ledState);
 }
 
 void updateLedState(){
@@ -85,8 +85,10 @@ void updateLedState(){
 
 void showOnLCD() {
   lcd.setCursor(0, 0);
+  lcd.print("Basic 1");
+  lcd.setCursor(0, 1);
   lcd.print("LED STATUS: ");
-  lcd.setCursor(12, 0);
+  lcd.setCursor(12, 1);
   if (ledState == 1) {
     lcd.print("ON ");
 

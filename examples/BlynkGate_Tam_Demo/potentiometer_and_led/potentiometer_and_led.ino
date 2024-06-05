@@ -2,11 +2,11 @@
 #define BLYNK_TEMPLATE_NAME "IoT"
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
-#define LED_PIN 9
-#define BUZZER_PIN 10
+#define LED_PIN 11
+#define POTEN_PIN A2
 
 #define POT_MIN_VALUE 0
-#define POT_MAX_VALUE 730
+#define POT_MAX_VALUE 690
 
 // Step 2: include library
 #include "BlynkGate.h"
@@ -20,7 +20,8 @@ char pass[] = "";             // Key in your wifi password.
 unsigned long lastTimeSen = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-uint8_t percentValue = 0;
+int percentValue = 0;
+int pwmValue = 0;
 void setup() {
   // put your setup code here, to run once:
   pinMode(LED_PIN, OUTPUT);
@@ -64,9 +65,9 @@ BLYNK_WRITE_DEFAULT() {
 }
 
 void controlLed() {
-  uint16_t temp_pot = constrain(analogRead(A3), POT_MIN_VALUE, POT_MAX_VALUE);
-  uint8_t pwmValue = map(temp_pot, POT_MIN_VALUE, POT_MAX_VALUE, 0, 255);
-  percentValue = map(pwmValue, 0, 255, 0, 100);
+  int temp_pot = constrain(analogRead(POTEN_PIN), POT_MIN_VALUE, POT_MAX_VALUE);
+  pwmValue = map(temp_pot, POT_MIN_VALUE, POT_MAX_VALUE, 0, 255);
+  pwmValue = constrain(pwmValue, 0, 255);
   analogWrite(LED_PIN, pwmValue);
 }
 
@@ -77,6 +78,7 @@ void showOnLCD() {
   lcd.setCursor(0, 1);
   lcd.print("LED ON: ");
   lcd.setCursor(8, 1);
+  percentValue = map(pwmValue, 0, 255, 0, 100);
   lcd.print(String(percentValue) + "%");
   lcd.print("    ");
 }
