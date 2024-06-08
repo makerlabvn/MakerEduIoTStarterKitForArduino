@@ -1,45 +1,47 @@
 /*
-  Title: Basic Demo 1
-  Author: Daniel Hoang
-  Date:   5/6/2024
-  Description: Using button to turn on or turn off the led and write state of the led into virtual pin V0 on Blynk
+  Title:  Led Dimmer
+  Author: Thanh Tam
+  Date: 5/6/2024
+  Description: Using button and potentiometer to control led and show on Blynk
+              - Virtual Pin V0 (Switch) on Blynk for button
+              - Virtual Pin V1 (Gauge)  on Blynk for Potentiometer
 */
+// Step 1: Get this infomation from Blynk.cloud
 #define BLYNK_TEMPLATE_ID "TMPL63kCqkp4D"
 #define BLYNK_TEMPLATE_NAME "IoT"
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
-#define BUTTON_PIN 9
-#define LED_PIN 11
-
 // Step 2: include library
 #include "BlynkGate.h"
-#include "LiquidCrystal_I2C.h"
 #include "OneButton.h"
-
 // Step 3: Setup WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-unsigned long lastTimeSen = 0;
+#define BUTTON_PIN 9
+#define BUZZER_PIN 10
+#define LED_PIN 11
+#define LDR_PIN A1
+#define POTEN_PIN A2
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+
 OneButton myButton(BUTTON_PIN, true, true);
 
-bool ledState = 0;
+unsigned long lastTimeSen = 0;
+
+int ledState = 0;
+int valuePotentiometer = 0;
+int brightness = 0;
+int brightnessPercent = 0;
+
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(LED_PIN, OUTPUT);
-
   Serial.begin(9600);
   Serial.println(F("Start BlynkGate I2C"));
-
-  lcd.init();
-  lcd.backlight();
-
-  myButton.attachClick(ledToggle);
-
+  myButton.attachClick(ledStateToggle);
   // Step 4: begin BlynkGate
   Blynk.begin(auth, ssid, pass);
 }
@@ -50,13 +52,13 @@ void loop() {
   // DO NOT using delay
   // delay(100);
   myButton.tick();
-  updateLedState();
-  showOnLCD();
+  ledControl();
+  readPotentiometer();
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 1000) {
+  if (millis() - lastTimeSen >= 5000) {
     lastTimeSen = millis();
+    Blynk.virtualWrite(1, brightnessPercent);
     // Step 6: Send Virtual pin Value
-    
   }
 }
 
@@ -70,7 +72,6 @@ BLYNK_WRITE_DEFAULT() {
   Serial.print(request.pin);
   Serial.print(": ");
   Serial.println(myInt);
-
   if (request.pin == 0) {
     if (myInt == 1) {
       ledState = 1;
@@ -80,26 +81,22 @@ BLYNK_WRITE_DEFAULT() {
   }
 }
 
-void ledToggle() {
+void ledStateToggle() {
   ledState = !ledState;
   Blynk.virtualWrite(0, ledState);
 }
 
-void updateLedState(){
-  digitalWrite(LED_PIN, ledState);
+void ledControl() {
+  if (ledState) {
+    analogWrite(LED_PIN, brightness);
+  } else {
+    analogWrite(LED_PIN, 0);
+  }
 }
 
-void showOnLCD() {
-  lcd.setCursor(0, 0);
-  lcd.print("Basic 1");
-  lcd.setCursor(0, 1);
-  lcd.print("LED STATUS: ");
-  lcd.setCursor(12, 1);
-  if (ledState == 1) {
-    lcd.print("ON ");
-
-  } else {
-    lcd.print("OFF");
-  }
-  lcd.print("   ");
+void readPotentiometer() {
+  valuePotentiometer = analogRead(POTEN_PIN);
+  brightness = map(valuePotentiometer, 0, 692, 0, 255);
+  brightness = constrain(brightness, 0, 255);
+  brightnessPercent = map(brightness, 0, 255, 0, 100);
 }
