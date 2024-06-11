@@ -9,7 +9,7 @@
 #define BLYNK_TEMPLATE_NAME "IoT"
 #define BLYNK_AUTH_TOKEN "xAW2hJhRm-zuK5qdZebxgGk_sscZ-1fY"
 
-#define BUTTON_PIN 9
+#define BUTTON_PIN A3
 #define LED_PIN 11
 
 // Step 2: include library
@@ -22,11 +22,12 @@ char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-unsigned long lastTimeSen = 0;
-
+unsigned long intervalLCD = 0;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 OneButton myButton(BUTTON_PIN, true, true);
 
+unsigned long lastTimeSen = 0;
 int ledState = 0;
 
 void setup() {
@@ -49,15 +50,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   Blynk.run();
   // DO NOT using delay
-  // delay(100);
   myButton.tick();
   updateLedState();
-  showOnLCD();
-  // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 1000) {
-    lastTimeSen = millis();
-    // Step 6: Send Virtual pin Value
-    
+  if (millis() - intervalLCD > 500) {
+    showOnLCD();
+    intervalLCD = millis();
   }
 }
 
@@ -86,7 +83,7 @@ void ledToggle() {
   Blynk.virtualWrite(0, ledState);
 }
 
-void updateLedState(){
+void updateLedState() {
   digitalWrite(LED_PIN, ledState);
 }
 
@@ -98,7 +95,6 @@ void showOnLCD() {
   lcd.setCursor(12, 1);
   if (ledState == 1) {
     lcd.print("ON ");
-
   } else {
     lcd.print("OFF");
   }

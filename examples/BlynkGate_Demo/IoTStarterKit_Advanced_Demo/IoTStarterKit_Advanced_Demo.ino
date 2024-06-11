@@ -21,24 +21,36 @@ char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-#define BUTTON_PIN 9
-#define BUZZER_PIN 10
-#define LED_PIN 11
+#define POTEN_MAX_VALUE 692
+#define POTEN_MIN_VALUE 0
+
+#define LDR_MIN_VALUE 0
+#define LDR_MAX_VALUE 692
+
+#define SETPOINT 60
+#define OFFSET   5
+
 #define LDR_PIN A1
 #define POTEN_PIN A2
+#define BUTTON_PIN A3
+#define BUZZER_PIN 10
+#define LED_PIN 11
 
 
+unsigned long intervalLCD = 0;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 OneButton myButton(BUTTON_PIN, true, true);
 
 unsigned long lastTimeSen = 0;
 
 bool ledState = false;
+
 int valuePotentiometer = 0;
 int brightness = 0;
 int brightnessPercent = 0;
-int valueLDR = 0;
 
+int valueLDR = 0;
+int lightPercent = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -56,14 +68,16 @@ void loop() {
   // put your main code here, to run repeatedly:
   Blynk.run();
   // DO NOT using delay
-  // delay(100);
   myButton.tick();
   ledControl();
   readPotentiometer();
   readLDR();
-  showOnLCD();
+  if(millis() - intervalLCD > 500){
+    showOnLCD();
+    intervalLCD = millis();
+  }
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 5000) {
+  if (millis() - lastTimeSen >= 10000) {
     lastTimeSen = millis();
     Blynk.virtualWrite(1, brightnessPercent);
     Blynk.virtualWrite(2, valueLDR);
@@ -106,12 +120,14 @@ void ledControl() {
 
 void readPotentiometer() {
   valuePotentiometer = analogRead(POTEN_PIN);
-  brightness = map(valuePotentiometer, 0, 692, 0, 255);
+  brightness = map(valuePotentiometer, POTEN_MIN_VALUE, POTEN_MAX_VALUE, 0, 255);
   brightness = constrain(brightness, 0, 255);
+  brightnessPercent = map(brightness, 0, 255, 0, 100);
 }
 
 void readLDR() {
   valueLDR = analogRead(LDR_PIN);
+  lightPercent = map(valueLDR, LDR_MAX_VALUE, LDR_MIN_VALUE, 0, 100);
 }
 
 void showOnLCD() {
@@ -124,24 +140,21 @@ void showOnLCD() {
     lcd.print("OFF");
   }
   lcd.setCursor(12, 0);
-  brightnessPercent = map(brightness, 0, 255, 0, 100);
   if (brightnessPercent < 10) {
-    lcd.print("  " + (String)brightnessPercent + "%");
+    lcd.print("  "); 
   } else if (brightnessPercent < 100) {
-    lcd.print(" " + (String)brightnessPercent + "%");
-  } else {
-    lcd.print((String)brightnessPercent + "%");
+    lcd.print(" ");
   }
+  lcd.print(brightnessPercent);
+  lcd.print("%");
   lcd.setCursor(0, 1);
   lcd.print("LIGHT: ");
   lcd.setCursor(8, 1);
-  int lightPercent = map(valueLDR, 760, 0, 0, 100);
-  if (lightPercent > 50) {
+  if (lightPercent > (SETPOINT + OFFSET)) {
     lcd.print("Bright");
-  } else if (lightPercent < 50) {
-    lcd.print("Dark");
+  } else if(lightPercent < (SETPOINT - OFFSET)){
+    lcd.print("Dark  ");
   }
-  lcd.print("      ");
 }
 
 void buzzer() {

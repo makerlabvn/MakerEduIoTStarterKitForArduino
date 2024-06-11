@@ -1,10 +1,9 @@
 /*
-  Title:  Led Dimmer
+  Title:  Potentiomenter and LCD
   Author: Thanh Tam
   Date: 5/6/2024
-  Description: Using button and potentiometer to control led and show on Blynk
-              - Virtual Pin V0 (Switch) on Blynk for button
-              - Virtual Pin V1 (Gauge)  on Blynk for Potentiometer
+  Description: Read value of potentiometer and show on LCD
+              - Virtual Pin V1 (Gauge) on Blynk for Potentiometer
 */
 // Step 1: Get this infomation from Blynk.cloud
 #define BLYNK_TEMPLATE_ID "TMPL63kCqkp4D"
@@ -13,35 +12,32 @@
 
 // Step 2: include library
 #include "BlynkGate.h"
-#include "OneButton.h"
+#include "LiquidCrystal_I2C.h"
 // Step 3: Setup WiFi
 char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-#define BUTTON_PIN 9
-#define BUZZER_PIN 10
-#define LED_PIN 11
-#define LDR_PIN A1
+#define POTEN_MAX_VALUE 692
+#define POTEN_MIN_VALUE 0
 #define POTEN_PIN A2
 
-
-
-OneButton myButton(BUTTON_PIN, true, true);
+unsigned long intervalLCD = 0;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 unsigned long lastTimeSen = 0;
 
-int ledState = 0;
 int valuePotentiometer = 0;
-int brightness = 0;
-int brightnessPercent = 0;
+int mapValue = 0;
+int percent = 0;
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println(F("Start BlynkGate I2C"));
-  myButton.attachClick(ledStateToggle);
+  lcd.init();
+  lcd.backlight();
   // Step 4: begin BlynkGate
   Blynk.begin(auth, ssid, pass);
 }
@@ -50,14 +46,15 @@ void loop() {
   // put your main code here, to run repeatedly:
   Blynk.run();
   // DO NOT using delay
-  // delay(100);
-  myButton.tick();
-  ledControl();
   readPotentiometer();
+  if (millis() - intervalLCD > 500) {
+    showOnLCD();
+    intervalLCD = millis();
+  }
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 5000) {
+  if (millis() - lastTimeSen >= 10000) {
     lastTimeSen = millis();
-    Blynk.virtualWrite(1, brightnessPercent);
+    Blynk.virtualWrite(1, percent);
     // Step 6: Send Virtual pin Value
   }
 }
@@ -72,31 +69,37 @@ BLYNK_WRITE_DEFAULT() {
   Serial.print(request.pin);
   Serial.print(": ");
   Serial.println(myInt);
-  if (request.pin == 0) {
-    if (myInt == 1) {
-      ledState = 1;
-    } else {
-      ledState = 0;
-    }
-  }
 }
 
-void ledStateToggle() {
-  ledState = !ledState;
-  Blynk.virtualWrite(0, ledState);
-}
-
-void ledControl() {
-  if (ledState) {
-    analogWrite(LED_PIN, brightness);
-  } else {
-    analogWrite(LED_PIN, 0);
-  }
-}
 
 void readPotentiometer() {
   valuePotentiometer = analogRead(POTEN_PIN);
-  brightness = map(valuePotentiometer, 0, 692, 0, 255);
-  brightness = constrain(brightness, 0, 255);
-  brightnessPercent = map(brightness, 0, 255, 0, 100);
+  mapValue = map(valuePotentiometer, POTEN_MIN_VALUE, POTEN_MAX_VALUE, 0, 255);
+  mapValue = constrain(mapValue, 0, 255);
+  percent = map(mapValue, 0, 255, 0, 100);
+}
+
+void showOnLCD() {
+  lcd.setCursor(1, 0);
+  lcd.print("IoT StarterKit");
+  lcd.setCursor(0, 1);
+  lcd.print("Value: ");
+  lcd.setCursor(7, 1);
+  if (valuePotentiometer / 10 == 0) {  // valuePotentiometer la so co 1 chu so
+    lcd.print(valuePotentiometer);
+    lcd.print("  ");
+  } else if (valuePotentiometer / 100 == 0) {  // valuePotentiometer la so co 2 chu so
+    lcd.print(valuePotentiometer);
+    lcd.print(" ");
+  } else {  // valuePotentiometer la so co 3 chu so
+    lcd.print(valuePotentiometer);
+  }
+  lcd.setCursor(12, 1);
+  if (percent < 10) {
+    lcd.print("  ");
+  } else if (percent < 100) {
+    lcd.print(" ");
+  }
+  lcd.print(percent);
+  lcd.print("%");
 }

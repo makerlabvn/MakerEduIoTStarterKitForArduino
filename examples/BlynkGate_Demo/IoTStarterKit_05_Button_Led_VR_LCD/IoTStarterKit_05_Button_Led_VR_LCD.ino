@@ -20,17 +20,22 @@ char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-#define BUTTON_PIN 9
-#define LED_PIN 11
+#define POTEN_MAX_VALUE 692
+#define POTEN_MIN_VALUE 0
+
 #define POTEN_PIN A2
+#define BUTTON_PIN A3
+#define LED_PIN 11
 
-
+unsigned long intervalLCD = 0;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 OneButton myButton(BUTTON_PIN, true, true);
 
 unsigned long lastTimeSen = 0;
 
 int ledState = 0;
+
 int valuePotentiometer = 0;
 int brightness = 0;
 int brightnessPercent = 0;
@@ -51,13 +56,15 @@ void loop() {
   // put your main code here, to run repeatedly:
   Blynk.run();
   // DO NOT using delay
-  // delay(100);
   myButton.tick();
   ledControl();
   readPotentiometer();
-  showOnLCD();
+  if (millis() - intervalLCD > 500) {
+    showOnLCD();
+    intervalLCD = millis();
+  }
   // Try using millis() and use "Blynk.virtualWrite" at least 10s at a time to avoid spamming the server
-  if (millis() - lastTimeSen >= 5000) {
+  if (millis() - lastTimeSen >= 10000) {
     lastTimeSen = millis();
     Blynk.virtualWrite(1, brightnessPercent);
     // Step 6: Send Virtual pin Value
@@ -98,7 +105,7 @@ void ledControl() {
 
 void readPotentiometer() {
   valuePotentiometer = analogRead(POTEN_PIN);
-  brightness = map(valuePotentiometer, 0, 692, 0, 255);
+  brightness = map(valuePotentiometer, POTEN_MIN_VALUE, POTEN_MAX_VALUE, 0, 255);
   brightness = constrain(brightness, 0, 255);
   brightnessPercent = map(brightness, 0, 255, 0, 100);
 }
@@ -116,10 +123,10 @@ void showOnLCD() {
   }
   lcd.setCursor(12, 1);
   if (brightnessPercent < 10) {
-    lcd.print("  " + (String)brightnessPercent + "%");
+    lcd.print("  ");
   } else if (brightnessPercent < 100) {
-    lcd.print(" " + (String)brightnessPercent + "%");
-  } else {
-    lcd.print((String)brightnessPercent + "%");
+    lcd.print(" ");
   }
+  lcd.print(brightnessPercent);
+  lcd.print("%");
 }
