@@ -29,7 +29,7 @@ char auth[] = BLYNK_AUTH_TOKEN;
 char ssid[] = "MakerLab.vn";  // Key in your wifi name (Bandwidth 2.4Ghz). You can check with your smart phone for your wifi name
 char pass[] = "";             // Key in your wifi password.
 
-unsigned long intetvalLCD = 0;
+unsigned long intervalLCD = 0;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 int percentValue = 0;
